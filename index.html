@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Feeding schedule for potted plants: NPK, humic acid, neem oil, vermicompost, neem khali and Saaf, each on its own interval, with mixing quantities for your pots.">
+<meta name="theme-color" content="#f3f5f0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121611" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Potting Table">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Potting Table</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a single-column phone ledger. Sticky header + tab rail, cards stacked, sheet for day detail. */
+:root{
+  --bg:#f3f5f0; --surface:#ffffff; --surface-2:#eaeee7; --fg:#1b231c; --muted:#67736a;
+  --line:#dbe2da; --line-2:#c6d0c5; --accent:#3d6b4b; --accent-soft:#e3ece4; --accent-ink:#ffffff;
+  --over:#a63a2b; --over-soft:#f7e6e3;
+  --h-npk:#2f6fa8; --h-humic:#93732a; --h-neem:#2f7f6a; --h-vermi:#6b4a33; --h-khali:#6f7a2f; --h-saaf:#7a4f8f;
+  --shadow:0 1px 2px rgba(27,35,28,.06), 0 6px 18px rgba(27,35,28,.05);
+  --display:"Newsreader",Georgia,"Times New Roman",serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:12px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121611; --surface:#1a1f1a; --surface-2:#232a23; --fg:#e6ebe4; --muted:#95a295;
+  --line:#2c342c; --line-2:#3b453b; --accent:#7fb28c; --accent-soft:#1f2c22; --accent-ink:#0f170f;
+  --over:#e2806c; --over-soft:#2e1d19;
+  --h-npk:#6fa8d8; --h-humic:#d4b05e; --h-neem:#6fc0a6; --h-vermi:#b08f6f; --h-khali:#b7bd6a; --h-saaf:#bb92cf;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.25);
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#121611; --surface:#1a1f1a; --surface-2:#232a23; --fg:#e6ebe4; --muted:#95a295;
+  --line:#2c342c; --line-2:#3b453b; --accent:#7fb28c; --accent-soft:#1f2c22; --accent-ink:#0f170f;
+  --over:#e2806c; --over-soft:#2e1d19;
+  --h-npk:#6fa8d8; --h-humic:#d4b05e; --h-neem:#6fc0a6; --h-vermi:#b08f6f; --h-khali:#b7bd6a; --h-saaf:#bb92cf;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.25);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+h1,h2,h3{margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.tnum{font-variant-numeric:tabular-nums}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:620px;margin:0 auto;padding:10px 16px 0}
+.brandrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.brand{font-family:var(--display);font-size:25px;font-weight:600;letter-spacing:-.01em}
+.brand em{font-style:italic;color:var(--accent)}
+.season{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:right;white-space:nowrap}
+.season.alert{color:var(--over)}
+.season.duenow{color:var(--accent)}
+.tabs{display:flex;gap:2px;margin-top:8px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:0;border-bottom:2px solid transparent;padding:8px 10px 9px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+
+main{max-width:620px;margin:0 auto;padding:16px 16px 60px}
+.view{display:flex;flex-direction:column;gap:14px}
+
+.banner{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border-radius:var(--r);font-size:13px;line-height:1.45}
+.banner.info{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+
+.sec{display:flex;flex-direction:column;gap:9px}
+.sec-h{display:flex;align-items:center;gap:9px;padding:2px 2px 0}
+.sec-h h2{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sec-h .rule{flex:1;height:1px;background:var(--line);min-width:12px}
+.sec-h .cnt{font-size:11px;font-weight:700;color:var(--muted)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.card.over{border-color:color-mix(in srgb,var(--over) 45%,var(--line))}
+.card-main{display:flex;gap:11px;padding:13px 14px;align-items:flex-start}
+.swatch{width:10px;height:10px;border-radius:3px;margin-top:6px;flex:0 0 auto;background:var(--sw,var(--accent))}
+.card-body{flex:1;min-width:0}
+.card-t{display:flex;flex-wrap:wrap;align-items:baseline;gap:7px}
+.card-t h3{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.every{font-size:12px;color:var(--muted);font-weight:500}
+.pill{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2.5px 7px;border-radius:999px;white-space:nowrap}
+.pill.over{background:var(--over-soft);color:var(--over)}
+.pill.due{background:var(--accent-soft);color:var(--accent)}
+.pill.soon{background:var(--surface-2);color:var(--muted)}
+.dose{margin-top:7px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.dose small{font-weight:500;color:var(--muted);font-size:12.5px;font-variant-numeric:normal}
+.meta{margin-top:4px;font-size:12.5px;color:var(--muted)}
+.meta .sep{opacity:.5;padding:0 5px}
+.card-foot{display:flex;gap:8px;padding:0 14px 13px;flex-wrap:wrap}
+.btn{border:1px solid var(--line-2);background:var(--surface);border-radius:9px;padding:8px 13px;font-size:13.5px;font-weight:600}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{border-color:transparent;background:var(--surface-2);color:var(--muted)}
+.btn.sm{padding:6px 10px;font-size:12.5px}
+.btn.danger{color:var(--over);border-color:color-mix(in srgb,var(--over) 35%,transparent)}
+.extra{border-top:1px solid var(--line);padding:12px 14px;display:flex;flex-direction:column;gap:10px;background:var(--surface-2)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lbl{font-size:12px;font-weight:600;color:var(--muted)}
+input[type="date"],input[type="number"],input[type="text"],select,textarea{background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:7px 9px;font-size:14px;max-width:100%}
+textarea{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;line-height:1.5}
+.howto{font-size:12.5px;color:var(--muted);line-height:1.55}
+.howto b{color:var(--fg)}
+
+.cal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 10px 10px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 4px 10px}
+.cal-h .mo{font-family:var(--display);font-size:19px;font-weight:600}
+.cal-h .mo span{color:var(--muted);font-weight:400}
+.nav{display:flex;gap:4px}
+.nav button{min-width:32px;height:32px;border-radius:8px;border:1px solid var(--line-2);background:var(--surface);display:grid;place-items:center;font-size:15px;line-height:1}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px}
+.dow div{text-align:center;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.day{aspect-ratio:1/1.08;border:1px solid transparent;border-radius:9px;background:var(--surface-2);padding:4px 2px 3px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0}
+.day.mute{background:transparent}
+.day.today{border-color:var(--accent);background:var(--accent-soft)}
+.day .n{font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.day .dots{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;min-height:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--sw,var(--accent));flex:0 0 auto}
+.dot.fore{background:transparent;box-shadow:inset 0 0 0 1.5px var(--sw,var(--accent))}
+.dot.plus{width:auto;height:auto;font-size:8px;font-weight:700;color:var(--muted);line-height:1}
+.legend{display:flex;flex-wrap:wrap;gap:5px 14px;padding:11px 4px 2px;border-top:1px solid var(--line);margin-top:9px}
+.legend span.li{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--muted)}
+
+.rowcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px;display:flex;gap:11px;align-items:flex-start}
+.logline{display:flex;gap:9px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);font-size:13.5px;min-width:0}
+.logline:last-child{border-bottom:0}
+.logline .nm{min-width:0;overflow-wrap:anywhere}
+.logline .d{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums;margin-left:auto;text-align:right}
+.rm{border:0;background:none;color:var(--muted);font-size:18px;line-height:1;padding:3px 0 3px 10px;flex:0 0 auto}
+.rm:hover{color:var(--over)}
+.empty{text-align:center;color:var(--muted);font-size:13.5px;padding:22px 12px;background:var(--surface);border:1px dashed var(--line-2);border-radius:var(--r)}
+
+.pot,.pothead{display:grid;grid-template-columns:minmax(0,1fr) 72px 72px 34px;gap:7px;align-items:center}
+.pot input{width:100%;min-width:0}
+.pot .x{border:1px solid var(--line-2);background:var(--surface);border-radius:8px;height:34px;display:grid;place-items:center;color:var(--muted)}
+.pothead{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0 2px}
+.total{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:10px 0 0;border-top:1px solid var(--line);margin-top:4px}
+.total b{font-variant-numeric:tabular-nums}
+
+.scrim{position:fixed;inset:0;background:rgba(14,20,15,.5);z-index:60;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:620px;max-height:84vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+.sheet-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.sheet-h h3{font-family:var(--display);font-size:20px;font-weight:600}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:70;background:var(--fg);color:var(--bg);border-radius:10px;padding:10px 13px;display:flex;gap:12px;align-items:center;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:calc(100% - 32px)}
+.toast button{background:none;border:0;font-weight:700;color:var(--bg);text-decoration:underline;padding:0}
+@media (prefers-reduced-motion:no-preference){.toast{animation:rise .18s ease-out}@keyframes rise{from{opacity:0;transform:translate(-50%,8px)}}}
+
+footer{max-width:620px;margin:0 auto;padding:4px 16px 34px;font-size:11.5px;color:var(--muted);line-height:1.5}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <div class="brandrow">
+      <h1 class="brand">Potting <em>Table</em></h1>
+      <div class="season" id="seasonChip"></div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" data-view="today" aria-selected="true">Today</button>
+      <button class="tab" role="tab" data-view="calendar" aria-selected="false">Calendar</button>
+      <button class="tab" role="tab" data-view="schedule" aria-selected="false">Schedule</button>
+      <button class="tab" role="tab" data-view="pots" aria-selected="false">Pots</button>
+      <button class="tab" role="tab" data-view="backup" aria-selected="false">Backup</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="view" id="view-today"></section>
+  <section class="view" id="view-calendar" hidden></section>
+  <section class="view" id="view-schedule" hidden></section>
+  <section class="view" id="view-pots" hidden></section>
+  <section class="view" id="view-backup" hidden></section>
+</main>
+
+<footer id="foot"></footer>
+
+<script>
+"use strict";
+var KEY = "pottingtable.v1";
+
+var DEFAULTS = {
+  items: [
+    { id:"npk", name:"NPK 19:19:19", every:20, hue:"npk", last:null,
+      dose:{kind:"perL", min:1, max:1, unit:"g"},
+      note:"About half a level yellow scoop per litre",
+      method:"Soil drench, or foliar mist in the evening" },
+    { id:"humic", name:"Humic Acid", every:30, hue:"humic", last:null,
+      dose:{kind:"perL", min:1, max:1.5, unit:"ml"},
+      note:"Mix until the water is a mild tea colour",
+      method:"Soil drench around the base" },
+    { id:"neem", name:"Neem Oil Spray", every:30, hue:"neem", last:null,
+      dose:{kind:"perL", min:5, max:5, unit:"ml"},
+      note:"Add 2 to 3 drops of liquid soap per litre so the oil emulsifies",
+      method:"Foliar spray on leaf undersides, late evening" },
+    { id:"vermi", name:"Vermicompost", every:60, hue:"vermi", last:null, pairs:"khali",
+      dose:{kind:"perPot", big:2, small:1, unit:"handfuls"},
+      note:"2 handfuls per 8 to 10 inch pot, 1 handful for smaller pots",
+      method:"Scratch the top inch of soil, fold in, then water" },
+    { id:"khali", name:"Neem Khali", every:60, hue:"khali", last:null, pairs:"vermi",
+      dose:{kind:"perPot", big:1, small:0.5, unit:"handfuls"},
+      note:"1 handful per 8 to 10 inch pot, mixed in with the vermicompost",
+      method:"Fold into the topsoil alongside the vermicompost" },
+    { id:"saaf", name:"Saaf Fungicide", every:90, hue:"saaf", last:null,
+      dose:{kind:"perL", min:1.5, max:1.5, unit:"g"},
+      note:"About 1 level yellow scoop per litre",
+      method:"Preventative soil drench, or a light foliar spray" }
+  ],
+  pots: [
+    { id:"p1", name:"Pot 1", size:10, litres:1 },
+    { id:"p2", name:"Pot 2", size:10, litres:1 },
+    { id:"p3", name:"Pot 3", size:8,  litres:1 },
+    { id:"p4", name:"Pot 4", size:6,  litres:0.5 }
+  ],
+  history: [],
+  sample: true
+};
+
+var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+var MON3 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+function load(){
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULTS));
+    var s = JSON.parse(raw);
+    if (!s || !Array.isArray(s.items) || !s.items.length) return JSON.parse(JSON.stringify(DEFAULTS));
+    delete s.season;
+    if (!Array.isArray(s.pots)) s.pots = [];
+    if (!Array.isArray(s.history)) s.history = [];
+    return s;
+  } catch(e){ return JSON.parse(JSON.stringify(DEFAULTS)); }
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+var state = load();
+
+/* dates, local only, no UTC drift */
+function iso(d){
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+}
+function parse(s){ var p = String(s).split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+function todayISO(){ return iso(new Date()); }
+function addDays(s, n){ var d = parse(s); d.setDate(d.getDate()+n); return iso(d); }
+function diffDays(a, b){ return Math.round((parse(b) - parse(a)) / 86400000); }
+function pretty(s){ var d = parse(s); return d.getDate() + " " + MON3[d.getMonth()]; }
+function prettyFull(s){ var d = parse(s); return d.getDate() + " " + MON3[d.getMonth()] + " " + d.getFullYear(); }
+
+/* The schedule runs all year: next due is simply the last application plus the interval. */
+function nextDue(item){
+  return item.last ? addDays(item.last, item.every) : todayISO();
+}
+function statusOf(item){
+  var due = nextDue(item), gap = diffDays(todayISO(), due);
+  if (!item.last) return { key:"start", due:due, gap:gap };
+  if (gap < 0) return { key:"over", due:due, gap:gap };
+  if (gap === 0) return { key:"due", due:due, gap:gap };
+  return { key:"soon", due:due, gap:gap };
+}
+function statusPill(st){
+  var n = Math.abs(st.gap);
+  if (st.key === "over")  return '<span class="pill over">' + n + (n===1?" day":" days") + ' late</span>';
+  if (st.key === "due")   return '<span class="pill due">Due today</span>';
+  if (st.key === "start") return '<span class="pill due">Not logged yet</span>';
+  return '<span class="pill soon">In ' + st.gap + (st.gap===1?" day":" days") + '</span>';
+}
+
+/* dosage, worked out from the pot list */
+function round(n){ return (Math.round(n*10)/10).toString().replace(/\.0$/,""); }
+function totalLitres(){ return state.pots.reduce(function(a,p){ return a + (Number(p.litres)||0); }, 0); }
+function bigPots(){ return state.pots.filter(function(p){ return (Number(p.size)||0) >= 8; }).length; }
+function doseFor(item){
+  if (!state.pots.length) return { main:"Add your pots to get the mixing quantity", sub:"" };
+  var d = item.dose;
+  if (d.kind === "perL"){
+    var L = totalLitres();
+    if (!L) return { main:"Set litres per pot to get the quantity", sub:"" };
+    var lo = round(L*d.min), hi = round(L*d.max);
+    return {
+      main: (lo === hi ? lo : lo + " to " + hi) + " " + d.unit + " in " + round(L) + " L water",
+      sub: (d.min === d.max ? round(d.min) : round(d.min) + " to " + round(d.max)) + " " + d.unit +
+           " per litre, across " + state.pots.length + " pot" + (state.pots.length===1?"":"s")
+    };
+  }
+  var big = bigPots(), small = state.pots.length - big, parts = [];
+  if (big)   parts.push(big + " pot" + (big===1?"":"s") + " at 8 inch or more");
+  if (small) parts.push(small + " smaller pot" + (small===1?"":"s"));
+  return { main: round(big*d.big + small*d.small) + " " + d.unit + " in total", sub: parts.join(", ") };
+}
+
+/* logging. The history is the record; each item's last application is derived from it. */
+var toastTimer = null;
+function byId(id){ return state.items.find(function(i){ return i.id === id; }); }
+function sortHistory(){
+  state.history.sort(function(a, b){ return a.d < b.d ? 1 : (a.d > b.d ? -1 : 0); });
+}
+function recomputeLast(id){
+  var item = byId(id);
+  if (!item) return;
+  var dates = state.history.filter(function(h){ return h.id === id; }).map(function(h){ return h.d; }).sort();
+  item.last = dates.length ? dates[dates.length-1] : null;
+}
+function addEntry(id, date){
+  state.history.push({ d:date, id:id });
+  sortHistory(); recomputeLast(id); save(); render();
+}
+function dropEntry(id, date){
+  var idx = -1;
+  for (var i = 0; i < state.history.length; i++){
+    if (state.history[i].id === id && state.history[i].d === date){ idx = i; break; }
+  }
+  if (idx === -1) return false;
+  state.history.splice(idx, 1);
+  recomputeLast(id); save(); render();
+  return true;
+}
+function logItem(id, date){
+  var item = byId(id);
+  if (!item) return;
+  addEntry(id, date);
+  showToast(item.name + " logged for " + pretty(date), function(){
+    dropEntry(id, date);
+    showToast("Entry removed", null);
+  });
+}
+function removeEntry(id, date){
+  var item = byId(id);
+  if (!item || !dropEntry(id, date)) return;
+  showToast(item.name + " on " + pretty(date) + " removed", function(){
+    addEntry(id, date);
+    showToast("Entry put back", null);
+  });
+}
+function showToast(msg, undo){
+  var old = document.getElementById("toast"); if (old) old.remove();
+  clearTimeout(toastTimer);
+  var t = document.createElement("div");
+  t.className = "toast"; t.id = "toast"; t.setAttribute("role","status");
+  t.appendChild(document.createTextNode(msg));
+  if (undo){
+    var b = document.createElement("button");
+    b.textContent = "Undo";
+    b.onclick = function(){ t.remove(); undo(); };
+    t.appendChild(b);
+  }
+  document.body.appendChild(t);
+  toastTimer = setTimeout(function(){ if (t.parentNode) t.remove(); }, 6000);
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+function el(html){ var t = document.createElement("div"); t.innerHTML = html.trim(); return t.firstElementChild; }
+
+/* cards */
+var openExtra = {};
+function cardFor(item){
+  var st = statusOf(item), d = doseFor(item);
+  var pair = item.pairs ? byId(item.pairs) : null;
+  var c = el(
+    '<article class="card' + (st.key==="over" ? " over" : "") + '">' +
+      '<div class="card-main">' +
+        '<div class="swatch" style="--sw:var(--h-' + item.hue + ')"></div>' +
+        '<div class="card-body">' +
+          '<div class="card-t"><h3>' + esc(item.name) + '</h3>' +
+            '<span class="every">every ' + item.every + ' days</span>' + statusPill(st) + '</div>' +
+          '<div class="dose">' + esc(d.main) + (d.sub ? ' <small>' + esc(d.sub) + '</small>' : '') + '</div>' +
+          '<div class="meta">' + esc(item.method) + '</div>' +
+          '<div class="meta">' + (item.last ? "Last applied " + prettyFull(item.last) : "No application logged yet") +
+            '<span class="sep">/</span>next ' + pretty(st.due) +
+            (pair ? '<span class="sep">/</span>apply with ' + esc(pair.name) : '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="card-foot">' +
+        '<button class="btn primary" data-act="log" data-id="' + item.id + '">Log today</button>' +
+        '<button class="btn" data-act="extra" data-id="' + item.id + '">' +
+          (openExtra[item.id] ? "Close" : "Another date, how much") + '</button>' +
+      '</div>' +
+    '</article>');
+  if (openExtra[item.id]){
+    c.appendChild(el(
+      '<div class="extra">' +
+        '<div class="row">' +
+          '<label class="lbl" for="dt-' + item.id + '">Applied on</label>' +
+          '<input type="date" id="dt-' + item.id + '" value="' + todayISO() + '" max="' + todayISO() + '">' +
+          '<button class="btn sm primary" data-act="logdate" data-id="' + item.id + '">Save</button>' +
+        '</div>' +
+        '<div class="howto"><b>How much:</b> ' + esc(item.note) + '<br><b>Method:</b> ' + esc(item.method) + '</div>' +
+      '</div>'));
+  }
+  return c;
+}
+
+/* Today */
+function renderToday(){
+  var v = document.getElementById("view-today"); v.innerHTML = "";
+  var t = todayISO();
+
+  if (state.sample){
+    v.appendChild(el('<div class="banner info"><div>Four sample pots are loaded so the quantities add up to something real. ' +
+      'Open <b>Pots</b> and put in your own, then every amount here becomes yours.</div></div>'));
+  }
+
+  var groups = [
+    { key:"over",   title:"Overdue" },
+    { key:"due",    title:"Due today" },
+    { key:"start",  title:"Not logged yet" },
+    { key:"soon",   title:"Coming up" }
+  ];
+  var shown = 0;
+  groups.forEach(function(g){
+    var list = state.items.filter(function(i){ return statusOf(i).key === g.key; });
+    if (!list.length) return;
+    shown += list.length;
+    list.sort(function(a,b){ return diffDays(t, nextDue(a)) - diffDays(t, nextDue(b)); });
+    var sec = el('<div class="sec"><div class="sec-h"><h2>' + g.title +
+      '</h2><span class="rule"></span><span class="cnt">' + list.length + '</span></div></div>');
+    list.forEach(function(i){ sec.appendChild(cardFor(i)); });
+    v.appendChild(sec);
+  });
+  if (!shown) v.appendChild(el('<div class="empty">Nothing on the schedule. Add an item under Schedule.</div>'));
+
+  var sec2 = el('<div class="sec"><div class="sec-h"><h2>Recent applications</h2><span class="rule"></span>' +
+    (state.history.length > 12 ? '<span class="cnt">' + state.history.length + ' in all</span>' : '') + '</div></div>');
+  var recent = state.history.slice(0, 12);
+  if (!recent.length){
+    sec2.appendChild(el('<div class="empty">Nothing logged yet. Tap <b>Log today</b> on any card above.</div>'));
+  } else {
+    var box = el('<div class="card" style="padding:3px 14px"></div>');
+    recent.forEach(function(h){
+      var it = byId(h.id); if (!it) return;
+      box.appendChild(el('<div class="logline"><span class="dot" style="--sw:var(--h-' + it.hue + ')"></span>' +
+        '<span class="nm">' + esc(it.name) + '</span><span class="d">' + prettyFull(h.d) + '</span>' +
+        '<button class="rm" data-act="drop" data-id="' + it.id + '" data-date="' + h.d +
+        '" aria-label="Remove ' + esc(it.name) + ' logged on ' + prettyFull(h.d) + '">&times;</button></div>'));
+    });
+    sec2.appendChild(box);
+  }
+  v.appendChild(sec2);
+}
+
+/* Calendar */
+var calMonth = (function(){ var d = new Date(); return { y:d.getFullYear(), m:d.getMonth() }; })();
+
+function monthData(y, m){
+  var start = iso(new Date(y, m, 1)), end = iso(new Date(y, m+1, 0));
+  var done = {}, due = {};
+  state.history.forEach(function(h){
+    if (h.d >= start && h.d <= end){
+      if (!done[h.d]) done[h.d] = [];
+      if (done[h.d].indexOf(h.id) === -1) done[h.d].push(h.id);
+    }
+  });
+  state.items.forEach(function(it){
+    if (!it.every || it.every < 1) return;
+    var cur = nextDue(it), guard = 0;
+    while (cur < start && guard++ < 1200){ cur = addDays(cur, it.every); }
+    guard = 0;
+    while (cur <= end && guard++ < 1200){
+      if (!due[cur]) due[cur] = [];
+      if (due[cur].indexOf(it.id) === -1) due[cur].push(it.id);
+      cur = addDays(cur, it.every);
+    }
+  });
+  return { done:done, due:due };
+}
+
+function renderCalendar(){
+  var v = document.getElementById("view-calendar"); v.innerHTML = "";
+  var y = calMonth.y, m = calMonth.m, data = monthData(y, m);
+  var startDow = (new Date(y, m, 1).getDay() + 6) % 7;
+  var days = new Date(y, m+1, 0).getDate(), t = todayISO();
+
+  var cal = el('<div class="cal">' +
+    '<div class="cal-h"><div class="mo">' + MONTHS[m] + ' <span>' + y + '</span></div>' +
+      '<div class="nav">' +
+        '<button data-act="prevm" aria-label="Previous month">&#8249;</button>' +
+        '<button data-act="thism" style="padding:0 10px;font-size:12px;font-weight:600">Today</button>' +
+        '<button data-act="nextm" aria-label="Next month">&#8250;</button>' +
+      '</div></div>' +
+    '<div class="dow"><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div><div>S</div></div>' +
+    '<div class="grid" id="calGrid"></div>' +
+    '<div class="legend">' +
+      '<span class="li"><span class="dot"></span>Logged</span>' +
+      '<span class="li"><span class="dot fore"></span>Scheduled</span>' +
+      '<span class="li">Tap a day to log or to see the mix</span>' +
+    '</div></div>');
+
+  var grid = cal.querySelector("#calGrid");
+  for (var i = 0; i < startDow; i++) grid.appendChild(el('<div class="day mute"></div>'));
+  for (var dn = 1; dn <= days; dn++){
+    var ds = iso(new Date(y, m, dn));
+    var cls = "day" + (ds === t ? " today" : "");
+    var cell = el('<div class="' + cls + '" data-act="day" data-date="' + ds + '" role="button" tabindex="0">' +
+      '<div class="n">' + dn + '</div><div class="dots"></div></div>');
+    var dots = cell.querySelector(".dots");
+    var doneIds = data.done[ds] || [], dueIds = data.due[ds] || [], marks = [];
+    doneIds.forEach(function(id){ var it = byId(id); if (it) marks.push({ hue:it.hue, fore:false }); });
+    dueIds.forEach(function(id){
+      if (doneIds.indexOf(id) !== -1) return;
+      var it = byId(id); if (it) marks.push({ hue:it.hue, fore:true });
+    });
+    marks.slice(0,4).forEach(function(mk){
+      dots.appendChild(el('<span class="dot' + (mk.fore ? " fore" : "") + '" style="--sw:var(--h-' + mk.hue + ')"></span>'));
+    });
+    if (marks.length > 4) dots.appendChild(el('<span class="dot plus">+' + (marks.length-4) + '</span>'));
+    grid.appendChild(cell);
+  }
+  v.appendChild(cal);
+
+  var key = el('<div class="sec"><div class="sec-h"><h2>Each product on the grid</h2><span class="rule"></span></div></div>');
+  var kb = el('<div class="card" style="padding:3px 14px"></div>');
+  state.items.forEach(function(it){
+    kb.appendChild(el('<div class="logline"><span class="dot" style="--sw:var(--h-' + it.hue + ')"></span>' +
+      '<span class="nm">' + esc(it.name) + '</span><span class="d">every ' + it.every + ' d, next ' +
+      pretty(statusOf(it).due) + '</span></div>'));
+  });
+  key.appendChild(kb); v.appendChild(key);
+}
+
+function openDay(ds){
+  var d = parse(ds), data = monthData(d.getFullYear(), d.getMonth());
+  var done = data.done[ds] || [], due = data.due[ds] || [], body = "";
+
+  if (done.length){
+    body += '<div class="sec-h" style="margin:0 0 4px"><h2>Logged</h2><span class="rule"></span></div>';
+    done.forEach(function(id){
+      var it = byId(id); if (!it) return;
+      body += '<div class="logline"><span class="dot" style="--sw:var(--h-' + it.hue + ')"></span>' +
+        '<span class="nm">' + esc(it.name) + '</span>' +
+        '<button class="rm" data-act="drop" data-id="' + it.id + '" data-date="' + ds +
+        '" aria-label="Remove this entry" style="margin-left:auto">&times;</button></div>';
+    });
+  }
+  var pending = due.filter(function(id){ return done.indexOf(id) === -1; });
+  if (pending.length){
+    body += '<div class="sec-h" style="margin:' + (done.length ? "16px" : "0") + ' 0 4px"><h2>Scheduled</h2><span class="rule"></span></div>';
+    pending.forEach(function(id){
+      var it = byId(id); if (!it) return;
+      body += '<div class="logline"><span class="dot fore" style="--sw:var(--h-' + it.hue + ')"></span>' +
+        '<span class="nm">' + esc(it.name) + '</span><span class="d">' + esc(doseFor(it).main) + '</span></div>';
+    });
+  }
+  if (!done.length && !pending.length){
+    body += '<div class="empty">Nothing logged or scheduled on this day.</div>';
+  }
+  if (ds <= todayISO()){
+    body += '<div class="sec-h" style="margin:16px 0 8px"><h2>Log an application on this day</h2><span class="rule"></span></div>' +
+      '<div class="card-foot" style="padding:0">' +
+      state.items.map(function(it){
+        return '<button class="btn sm" data-act="logon" data-id="' + it.id + '" data-date="' + ds + '">' + esc(it.name) + '</button>';
+      }).join("") + '</div>';
+  } else {
+    body += '<div class="howto" style="padding-top:14px">This day has not arrived yet. You can log an application once it does.</div>';
+  }
+  showSheet(prettyFull(ds), body);
+}
+
+/* Schedule */
+function renderSchedule(){
+  var v = document.getElementById("view-schedule"); v.innerHTML = "";
+  v.appendChild(el('<div class="banner info"><div>Change an interval and the next due date moves with it. ' +
+    'Every date counts forward from the last application, so a late feed simply shifts the next one. ' +
+    'The schedule runs all twelve months, with no seasonal break.</div></div>'));
+
+  var sec = el('<div class="sec"><div class="sec-h"><h2>Products and intervals</h2><span class="rule"></span></div></div>');
+  state.items.forEach(function(it){
+    sec.appendChild(el('<div class="rowcard">' +
+      '<div class="swatch" style="--sw:var(--h-' + it.hue + ');margin-top:5px"></div>' +
+      '<div class="card-body">' +
+        '<div class="card-t"><h3>' + esc(it.name) + '</h3>' + statusPill(statusOf(it)) + '</div>' +
+        '<div class="meta" style="margin-top:3px">' + esc(it.note) + '</div>' +
+        '<div class="row" style="margin-top:10px">' +
+          '<label class="lbl" for="ev-' + it.id + '">Every</label>' +
+          '<input class="tnum" type="number" id="ev-' + it.id + '" min="1" max="730" step="1" value="' + it.every +
+            '" style="width:72px" data-act="every" data-id="' + it.id + '">' +
+          '<span class="every">days</span>' +
+          '<label class="lbl" for="ls-' + it.id + '" style="margin-left:4px">Last applied</label>' +
+          '<input type="date" id="ls-' + it.id + '" value="' + (it.last || "") + '" max="' + todayISO() +
+            '" data-act="setlast" data-id="' + it.id + '">' +
+          (it.last ? '<button class="btn sm ghost" data-act="clearlast" data-id="' + it.id + '">Clear log</button>' : '') +
+        '</div>' +
+      '</div></div>'));
+  });
+  v.appendChild(sec);
+}
+
+/* Pots */
+function renderPots(){
+  var v = document.getElementById("view-pots"); v.innerHTML = "";
+  v.appendChild(el('<div class="banner info"><div>Every quantity in the app is worked out from this list. ' +
+    '<b>Litres</b> is how much mixed solution one pot takes in a single drench.</div></div>'));
+
+  var sec = el('<div class="sec"><div class="sec-h"><h2>My pots</h2><span class="rule"></span><span class="cnt">' +
+    state.pots.length + '</span></div></div>');
+  var box = el('<div class="card" style="padding:13px 14px;display:flex;flex-direction:column;gap:7px"></div>');
+  box.appendChild(el('<div class="pothead"><div>Plant or pot</div><div>Size (in)</div><div>Litres</div><div></div></div>'));
+  if (!state.pots.length){
+    box.appendChild(el('<div class="empty" style="border:0;padding:16px 0">No pots yet. Add your first one below.</div>'));
+  }
+  state.pots.forEach(function(p){
+    box.appendChild(el('<div class="pot">' +
+      '<input type="text" value="' + esc(p.name) + '" data-act="potname" data-id="' + p.id + '" aria-label="Pot name">' +
+      '<input class="tnum" type="number" min="2" max="48" step="1" value="' + p.size +
+        '" data-act="potsize" data-id="' + p.id + '" aria-label="Pot size in inches">' +
+      '<input class="tnum" type="number" min="0.1" max="20" step="0.1" value="' + p.litres +
+        '" data-act="potlitres" data-id="' + p.id + '" aria-label="Litres per drench">' +
+      '<button class="x" data-act="potdel" data-id="' + p.id + '" aria-label="Remove ' + esc(p.name) + '">&times;</button>' +
+    '</div>'));
+  });
+  box.appendChild(el('<div class="total"><span>' + state.pots.length + ' pots, ' + bigPots() +
+    ' at 8 inch or more</span><b>' + round(totalLitres()) + ' L per full drench</b></div>'));
+  box.appendChild(el('<div class="card-foot" style="padding:10px 0 0">' +
+    '<button class="btn primary" data-act="potadd">Add a pot</button>' +
+    (state.sample ? '<button class="btn danger" data-act="potclear">Remove the sample pots</button>' : '') +
+  '</div>'));
+  sec.appendChild(box); v.appendChild(sec);
+
+  var mix = el('<div class="sec"><div class="sec-h"><h2>Mix for the whole set</h2><span class="rule"></span></div></div>');
+  var mb = el('<div class="card" style="padding:3px 14px"></div>');
+  state.items.forEach(function(it){
+    mb.appendChild(el('<div class="logline"><span class="dot" style="--sw:var(--h-' + it.hue + ')"></span>' +
+      '<span class="nm">' + esc(it.name) + '</span><span class="d">' + esc(doseFor(it).main) + '</span></div>'));
+  });
+  mix.appendChild(mb); v.appendChild(mix);
+}
+
+/* Backup */
+function renderBackup(){
+  var v = document.getElementById("view-backup"); v.innerHTML = "";
+  v.appendChild(el('<div class="banner info"><div>Everything is stored in this browser on this device only. ' +
+    'Nothing is sent anywhere. Clearing site data wipes it, so copy the backup below somewhere safe now and then.</div></div>'));
+
+  var sec = el('<div class="sec"><div class="sec-h"><h2>Backup</h2><span class="rule"></span></div></div>');
+  var b = el('<div class="card" style="padding:13px 14px;display:flex;flex-direction:column;gap:9px">' +
+    '<textarea id="dump" rows="6" readonly aria-label="Backup data"></textarea>' +
+    '<div class="card-foot" style="padding:0"><button class="btn primary" data-act="copy">Copy backup</button></div></div>');
+  b.querySelector("#dump").value = JSON.stringify(state);
+  sec.appendChild(b); v.appendChild(sec);
+
+  var rsec = el('<div class="sec"><div class="sec-h"><h2>Restore</h2><span class="rule"></span></div></div>');
+  rsec.appendChild(el('<div class="card" style="padding:13px 14px;display:flex;flex-direction:column;gap:9px">' +
+    '<textarea id="restore" rows="4" placeholder="Paste a backup here" aria-label="Paste backup to restore"></textarea>' +
+    '<div class="card-foot" style="padding:0">' +
+      '<button class="btn" data-act="restore">Restore from paste</button>' +
+      '<button class="btn danger" data-act="reset">Reset everything</button>' +
+    '</div><div class="howto" id="restoreMsg"></div></div>'));
+  v.appendChild(rsec);
+
+  var isec = el('<div class="sec"><div class="sec-h"><h2>Put it on your home screen</h2><span class="rule"></span></div></div>');
+  isec.appendChild(el('<div class="card" style="padding:13px 14px"><div class="howto">' +
+    '<b>iPhone:</b> open this page in Safari, tap Share, then Add to Home Screen.<br>' +
+    '<b>Android:</b> open it in Chrome, tap the three dot menu, then Add to Home screen.<br>' +
+    'It then opens full screen like an app, and your log stays on the phone.</div></div>'));
+  v.appendChild(isec);
+}
+
+/* sheet */
+function showSheet(title, html){
+  closeSheet();
+  var s = el('<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="' + esc(title) + '">' +
+    '<div class="sheet-h"><h3>' + esc(title) + '</h3>' +
+    '<button class="btn sm ghost" data-act="closesheet">Close</button></div>' +
+    '<div id="sheetBody"></div></div>');
+  s.querySelector("#sheetBody").innerHTML = html;
+  s.addEventListener("click", function(e){ if (e.target === s) closeSheet(); });
+  document.body.appendChild(s);
+}
+function closeSheet(){ var s = document.getElementById("scrim"); if (s) s.remove(); }
+
+/* render */
+var current = "today";
+function render(){
+  var chip = document.getElementById("seasonChip");
+  var late = 0, now = 0;
+  state.items.forEach(function(i){
+    var k = statusOf(i).key;
+    if (k === "over") late++;
+    else if (k === "due" || k === "start") now++;
+  });
+  if (late){ chip.className = "season alert"; chip.textContent = late + (late === 1 ? " item overdue" : " items overdue"); }
+  else if (now){ chip.className = "season duenow"; chip.textContent = now + (now === 1 ? " item due today" : " items due today"); }
+  else { chip.className = "season"; chip.textContent = "Nothing due today"; }
+
+  ["today","calendar","schedule","pots","backup"].forEach(function(k){
+    document.getElementById("view-" + k).hidden = (k !== current);
+  });
+  if (current === "today") renderToday();
+  else if (current === "calendar") renderCalendar();
+  else if (current === "schedule") renderSchedule();
+  else if (current === "pots") renderPots();
+  else if (current === "backup") renderBackup();
+  document.getElementById("foot").textContent =
+    "Intervals from your own feeding table, running all year. Saved on this device only.";
+}
+
+/* events */
+document.addEventListener("click", function(e){
+  var tab = e.target.closest(".tab");
+  if (tab){
+    current = tab.dataset.view;
+    document.querySelectorAll(".tab").forEach(function(t){ t.setAttribute("aria-selected", String(t === tab)); });
+    render();
+    window.scrollTo({ top:0 });
+    return;
+  }
+  var b = e.target.closest("[data-act]");
+  if (!b) return;
+  var a = b.dataset.act, id = b.dataset.id;
+
+  if (a === "log"){ logItem(id, todayISO()); }
+  else if (a === "extra"){ openExtra[id] = !openExtra[id]; render(); }
+  else if (a === "logdate"){
+    var inp = document.getElementById("dt-" + id);
+    if (inp && inp.value){ openExtra[id] = false; logItem(id, inp.value); }
+  }
+  else if (a === "logon"){ closeSheet(); logItem(id, b.dataset.date); }
+  else if (a === "drop"){ closeSheet(); removeEntry(id, b.dataset.date); }
+  else if (a === "prevm"){ calMonth.m--; if (calMonth.m < 0){ calMonth.m = 11; calMonth.y--; } render(); }
+  else if (a === "nextm"){ calMonth.m++; if (calMonth.m > 11){ calMonth.m = 0; calMonth.y++; } render(); }
+  else if (a === "thism"){ var n = new Date(); calMonth = { y:n.getFullYear(), m:n.getMonth() }; render(); }
+  else if (a === "day"){ openDay(b.dataset.date); }
+  else if (a === "closesheet"){ closeSheet(); }
+  else if (a === "clearlast"){
+    var it = byId(id);
+    if (!it) return;
+    var logged = state.history.filter(function(h){ return h.id === id; }).length;
+    if (logged && b.dataset.sure !== "1"){
+      b.dataset.sure = "1";
+      b.textContent = "Clear all " + logged + "?";
+      return;
+    }
+    state.history = state.history.filter(function(h){ return h.id !== id; });
+    it.last = null; save(); render();
+    showToast(it.name + " log cleared", null);
+  }
+  else if (a === "potadd"){
+    state.pots.push({ id:"p" + Date.now(), name:"Pot " + (state.pots.length + 1), size:10, litres:1 });
+    save(); render();
+  }
+  else if (a === "potdel"){
+    state.pots = state.pots.filter(function(p){ return p.id !== id; });
+    save(); render();
+  }
+  else if (a === "potclear"){
+    state.pots = []; state.sample = false; save(); render();
+    showToast("Sample pots removed. Add your own.", null);
+  }
+  else if (a === "copy"){
+    var ta = document.getElementById("dump");
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(ta.value).then(
+        function(){ showToast("Backup copied", null); },
+        function(){ ta.select(); showToast("Text selected, use your keyboard to copy", null); });
+    } else { ta.select(); showToast("Text selected, use your keyboard to copy", null); }
+  }
+  else if (a === "restore"){
+    var msg = document.getElementById("restoreMsg");
+    try {
+      var p = JSON.parse(document.getElementById("restore").value.trim());
+      if (!p || !Array.isArray(p.items) || !p.items.length) throw new Error("there is no schedule in it");
+      state = p;
+      delete state.season;
+      if (!Array.isArray(state.pots)) state.pots = [];
+      if (!Array.isArray(state.history)) state.history = [];
+      save(); current = "today";
+      document.querySelectorAll(".tab").forEach(function(t){
+        t.setAttribute("aria-selected", String(t.dataset.view === "today"));
+      });
+      render(); showToast("Backup restored", null);
+    } catch(err){ msg.textContent = "Could not read that backup: " + err.message + "."; }
+  }
+  else if (a === "reset"){
+    if (b.dataset.sure === "1"){
+      state = JSON.parse(JSON.stringify(DEFAULTS));
+      save(); render(); showToast("Reset to the starting schedule", null);
+    } else {
+      b.dataset.sure = "1";
+      b.textContent = "Tap again to erase everything";
+    }
+  }
+});
+
+document.addEventListener("change", function(e){
+  var t = e.target.closest("[data-act]");
+  if (!t) return;
+  var a = t.dataset.act, id = t.dataset.id, p;
+  if (a === "every"){
+    var it = byId(id);
+    if (it){ it.every = Math.max(1, Math.min(730, Math.round(Number(t.value) || 1))); save(); render(); }
+  }
+  else if (a === "setlast"){ var i2 = byId(id); if (i2){ i2.last = t.value || null; save(); render(); } }
+  else if (a === "potname"){ p = state.pots.find(function(x){ return x.id === id; }); if (p){ p.name = t.value; save(); } }
+  else if (a === "potsize"){ p = state.pots.find(function(x){ return x.id === id; }); if (p){ p.size = Number(t.value) || 0; save(); render(); } }
+  else if (a === "potlitres"){ p = state.pots.find(function(x){ return x.id === id; }); if (p){ p.litres = Number(t.value) || 0; save(); render(); } }
+});
+
+document.addEventListener("keydown", function(e){
+  if (e.key === "Escape"){ closeSheet(); return; }
+  if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.act === "day"){
+    e.preventDefault(); openDay(e.target.dataset.date);
+  }
+});
+
+render();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () { /* offline support is optional */ });
+  });
+}
+</script>
+</body>
+</html>
