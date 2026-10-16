@@ -1,9 +1,9 @@
 {
   "name": "Potting Table",
   "short_name": "Potting Table",
-  "id": "/potting-table/app-v2",
+  "id": "/potting-table/app-v3",
   "description": "Feeding schedule for potted plants: NPK, humic acid, neem oil, vermicompost, neem khali and Saaf, each on its own interval, with mixing quantities for your pots.",
-  "start_url": "./",
+  "start_url": "./?app=1",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
