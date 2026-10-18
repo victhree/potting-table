@@ -144,12 +144,6 @@ textarea{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font
 .rm:hover{color:var(--over)}
 .empty{text-align:center;color:var(--muted);font-size:13.5px;padding:22px 12px;background:var(--surface);border:1px dashed var(--line-2);border-radius:var(--r)}
 
-.pot,.pothead{display:grid;grid-template-columns:minmax(0,1fr) 72px 72px 34px;gap:7px;align-items:center}
-.pot input{width:100%;min-width:0}
-.pot .x{border:1px solid var(--line-2);background:var(--surface);border-radius:8px;height:34px;display:grid;place-items:center;color:var(--muted)}
-.pothead{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:0 2px}
-.total{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:10px 0 0;border-top:1px solid var(--line);margin-top:4px}
-.total b{font-variant-numeric:tabular-nums}
 
 .scrim{position:fixed;inset:0;background:rgba(14,20,15,.5);z-index:60;display:flex;align-items:flex-end;justify-content:center}
 .sheet{background:var(--surface);width:100%;max-width:620px;max-height:84vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(20px + env(safe-area-inset-bottom,0px));box-shadow:0 -8px 30px rgba(0,0,0,.25)}
@@ -160,7 +154,6 @@ textarea{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font
 .toast button{background:none;border:0;font-weight:700;color:var(--bg);text-decoration:underline;padding:0}
 @media (prefers-reduced-motion:no-preference){.toast{animation:rise .18s ease-out}@keyframes rise{from{opacity:0;transform:translate(-50%,8px)}}}
 
-footer{max-width:620px;margin:0 auto;padding:4px 16px 34px;font-size:11.5px;color:var(--muted);line-height:1.5}
 </style>
 </head>
 <body>
@@ -171,24 +164,20 @@ footer{max-width:620px;margin:0 auto;padding:4px 16px 34px;font-size:11.5px;colo
       <div class="season" id="seasonChip"></div>
     </div>
     <nav class="tabs" role="tablist">
-      <button class="tab" role="tab" data-view="today" aria-selected="true">Today</button>
-      <button class="tab" role="tab" data-view="calendar" aria-selected="false">Calendar</button>
+      <button class="tab" role="tab" data-view="calendar" aria-selected="true">Calendar</button>
+      <button class="tab" role="tab" data-view="today" aria-selected="false">Due</button>
       <button class="tab" role="tab" data-view="schedule" aria-selected="false">Schedule</button>
-      <button class="tab" role="tab" data-view="pots" aria-selected="false">Pots</button>
       <button class="tab" role="tab" data-view="backup" aria-selected="false">Backup</button>
     </nav>
   </div>
 </header>
 
 <main>
-  <section class="view" id="view-today"></section>
-  <section class="view" id="view-calendar" hidden></section>
+  <section class="view" id="view-calendar"></section>
+  <section class="view" id="view-today" hidden></section>
   <section class="view" id="view-schedule" hidden></section>
-  <section class="view" id="view-pots" hidden></section>
   <section class="view" id="view-backup" hidden></section>
 </main>
-
-<footer id="foot"></footer>
 
 <script>
 "use strict";
@@ -206,7 +195,7 @@ var DEFAULTS = {
       method:"Soil drench around the base" },
     { id:"epsom", name:"Epsom Salt", every:30, hue:"epsom", last:null,
       dose:{kind:"perL", min:1, max:1, unit:"g"},
-      note:"1 g per litre, about one level scoop",
+      note:"About one level scoop per litre",
       method:"Foliar spray, early morning or after sunset" },
     { id:"neem", name:"Neem Oil Spray", every:30, hue:"neem", last:null,
       dose:{kind:"perL", min:5, max:5, unit:"ml"},
@@ -225,14 +214,7 @@ var DEFAULTS = {
       note:"About 1 level yellow scoop per litre",
       method:"Preventative soil drench, or a light foliar spray" }
   ],
-  pots: [
-    { id:"p1", name:"Pot 1", size:10, litres:1 },
-    { id:"p2", name:"Pot 2", size:10, litres:1 },
-    { id:"p3", name:"Pot 3", size:8,  litres:1 },
-    { id:"p4", name:"Pot 4", size:6,  litres:0.5 }
-  ],
-  history: [],
-  sample: true
+  history: []
 };
 
 var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -244,8 +226,7 @@ function load(){
     if (!raw) return JSON.parse(JSON.stringify(DEFAULTS));
     var s = JSON.parse(raw);
     if (!s || !Array.isArray(s.items) || !s.items.length) return JSON.parse(JSON.stringify(DEFAULTS));
-    delete s.season;
-    if (!Array.isArray(s.pots)) s.pots = [];
+    delete s.season; delete s.pots; delete s.sample;
     if (!Array.isArray(s.history)) s.history = [];
     // Pick up any product added since this device last saved, leaving the
     // existing products, their intervals and the whole log untouched.
@@ -289,27 +270,14 @@ function statusPill(st){
   return '<span class="pill soon">In ' + st.gap + (st.gap===1?" day":" days") + '</span>';
 }
 
-/* dosage, worked out from the pot list */
+/* dosage, exactly as the feeding table states it */
 function round(n){ return (Math.round(n*10)/10).toString().replace(/\.0$/,""); }
-function totalLitres(){ return state.pots.reduce(function(a,p){ return a + (Number(p.litres)||0); }, 0); }
-function bigPots(){ return state.pots.filter(function(p){ return (Number(p.size)||0) >= 8; }).length; }
-function doseFor(item){
-  if (!state.pots.length) return { main:"Add your pots to get the mixing quantity", sub:"" };
+function doseText(item){
   var d = item.dose;
   if (d.kind === "perL"){
-    var L = totalLitres();
-    if (!L) return { main:"Set litres per pot to get the quantity", sub:"" };
-    var lo = round(L*d.min), hi = round(L*d.max);
-    return {
-      main: (lo === hi ? lo : lo + " to " + hi) + " " + d.unit + " in " + round(L) + " L water",
-      sub: (d.min === d.max ? round(d.min) : round(d.min) + " to " + round(d.max)) + " " + d.unit +
-           " per litre, across " + state.pots.length + " pot" + (state.pots.length===1?"":"s")
-    };
+    return (d.min === d.max ? round(d.min) : round(d.min) + " to " + round(d.max)) + " " + d.unit + " per litre";
   }
-  var big = bigPots(), small = state.pots.length - big, parts = [];
-  if (big)   parts.push(big + " pot" + (big===1?"":"s") + " at 8 inch or more");
-  if (small) parts.push(small + " smaller pot" + (small===1?"":"s"));
-  return { main: round(big*d.big + small*d.small) + " " + d.unit + " in total", sub: parts.join(", ") };
+  return round(d.big) + (d.big === 1 ? " handful" : " handfuls") + " per 8 to 10 inch pot";
 }
 
 /* logging. The history is the record; each item's last application is derived from it. */
@@ -377,7 +345,7 @@ function el(html){ var t = document.createElement("div"); t.innerHTML = html.tri
 /* cards */
 var openExtra = {};
 function cardFor(item){
-  var st = statusOf(item), d = doseFor(item);
+  var st = statusOf(item), d = { main: doseText(item) };
   var pair = item.pairs ? byId(item.pairs) : null;
   var c = el(
     '<article class="card' + (st.key==="over" ? " over" : "") + '">' +
@@ -385,29 +353,27 @@ function cardFor(item){
         '<div class="swatch" style="--sw:var(--h-' + item.hue + ')"></div>' +
         '<div class="card-body">' +
           '<div class="card-t"><h3>' + esc(item.name) + '</h3>' +
-            '<span class="every">every ' + item.every + ' days</span>' + statusPill(st) + '</div>' +
-          '<div class="dose">' + esc(d.main) + (d.sub ? ' <small>' + esc(d.sub) + '</small>' : '') + '</div>' +
-          '<div class="meta">' + esc(item.method) + '</div>' +
-          '<div class="meta">' + (item.last ? "Last applied " + prettyFull(item.last) : "No application logged yet") +
-            '<span class="sep">/</span>next ' + pretty(st.due) +
-            (pair ? '<span class="sep">/</span>apply with ' + esc(pair.name) : '') + '</div>' +
+            '<span class="every">every ' + item.every + ' d</span>' + statusPill(st) + '</div>' +
+          '<div class="dose">' + esc(d.main) + '</div>' +
+          '<div class="meta">' + (item.last ? prettyFull(item.last) + '<span class="sep">/</span>' : '') +
+            'next ' + pretty(st.due) +
+            (pair ? '<span class="sep">/</span>with ' + esc(pair.name) : '') + '</div>' +
         '</div>' +
       '</div>' +
       '<div class="card-foot">' +
         '<button class="btn primary" data-act="log" data-id="' + item.id + '">Log today</button>' +
         '<button class="btn" data-act="extra" data-id="' + item.id + '">' +
-          (openExtra[item.id] ? "Close" : "Another date, how much") + '</button>' +
+          (openExtra[item.id] ? "Close" : "Details") + '</button>' +
       '</div>' +
     '</article>');
   if (openExtra[item.id]){
     c.appendChild(el(
       '<div class="extra">' +
         '<div class="row">' +
-          '<label class="lbl" for="dt-' + item.id + '">Applied on</label>' +
           '<input type="date" id="dt-' + item.id + '" value="' + todayISO() + '" max="' + todayISO() + '">' +
-          '<button class="btn sm primary" data-act="logdate" data-id="' + item.id + '">Save</button>' +
+          '<button class="btn sm primary" data-act="logdate" data-id="' + item.id + '">Log</button>' +
         '</div>' +
-        '<div class="howto"><b>How much:</b> ' + esc(item.note) + '<br><b>Method:</b> ' + esc(item.method) + '</div>' +
+        '<div class="howto">' + esc(item.note) + '<br>' + esc(item.method) + '</div>' +
       '</div>'));
   }
   return c;
@@ -417,11 +383,6 @@ function cardFor(item){
 function renderToday(){
   var v = document.getElementById("view-today"); v.innerHTML = "";
   var t = todayISO();
-
-  if (state.sample){
-    v.appendChild(el('<div class="banner info"><div>Four sample pots are loaded so the quantities add up to something real. ' +
-      'Open <b>Pots</b> and put in your own, then every amount here becomes yours.</div></div>'));
-  }
 
   var groups = [
     { key:"over",   title:"Overdue" },
@@ -440,13 +401,13 @@ function renderToday(){
     list.forEach(function(i){ sec.appendChild(cardFor(i)); });
     v.appendChild(sec);
   });
-  if (!shown) v.appendChild(el('<div class="empty">Nothing on the schedule. Add an item under Schedule.</div>'));
+  if (!shown) v.appendChild(el('<div class="empty">Nothing scheduled.</div>'));
 
-  var sec2 = el('<div class="sec"><div class="sec-h"><h2>Recent applications</h2><span class="rule"></span>' +
-    (state.history.length > 12 ? '<span class="cnt">' + state.history.length + ' in all</span>' : '') + '</div></div>');
+  var sec2 = el('<div class="sec"><div class="sec-h"><h2>Recent</h2><span class="rule"></span>' +
+    (state.history.length > 12 ? '<span class="cnt">' + state.history.length + '</span>' : '') + '</div></div>');
   var recent = state.history.slice(0, 12);
   if (!recent.length){
-    sec2.appendChild(el('<div class="empty">Nothing logged yet. Tap <b>Log today</b> on any card above.</div>'));
+    sec2.appendChild(el('<div class="empty">No entries yet.</div>'));
   } else {
     var box = el('<div class="card" style="padding:3px 14px"></div>');
     recent.forEach(function(h){
@@ -505,7 +466,6 @@ function renderCalendar(){
     '<div class="legend">' +
       '<span class="li"><span class="dot"></span>Logged</span>' +
       '<span class="li"><span class="dot fore"></span>Scheduled</span>' +
-      '<span class="li">Tap a day to log or to see the mix</span>' +
     '</div></div>');
 
   var grid = cal.querySelector("#calGrid");
@@ -530,7 +490,7 @@ function renderCalendar(){
   }
   v.appendChild(cal);
 
-  var key = el('<div class="sec"><div class="sec-h"><h2>Each product on the grid</h2><span class="rule"></span></div></div>');
+  var key = el('<div class="sec"></div>');
   var kb = el('<div class="card" style="padding:3px 14px"></div>');
   state.items.forEach(function(it){
     kb.appendChild(el('<div class="logline"><span class="dot" style="--sw:var(--h-' + it.hue + ')"></span>' +
@@ -560,20 +520,18 @@ function openDay(ds){
     pending.forEach(function(id){
       var it = byId(id); if (!it) return;
       body += '<div class="logline"><span class="dot fore" style="--sw:var(--h-' + it.hue + ')"></span>' +
-        '<span class="nm">' + esc(it.name) + '</span><span class="d">' + esc(doseFor(it).main) + '</span></div>';
+        '<span class="nm">' + esc(it.name) + '</span><span class="d">' + esc(doseText(it)) + '</span></div>';
     });
   }
   if (!done.length && !pending.length){
-    body += '<div class="empty">Nothing logged or scheduled on this day.</div>';
+    body += '<div class="empty">Nothing on this day.</div>';
   }
   if (ds <= todayISO()){
-    body += '<div class="sec-h" style="margin:16px 0 8px"><h2>Log an application on this day</h2><span class="rule"></span></div>' +
+    body += '<div class="sec-h" style="margin:16px 0 8px"><h2>Log</h2><span class="rule"></span></div>' +
       '<div class="card-foot" style="padding:0">' +
       state.items.map(function(it){
         return '<button class="btn sm" data-act="logon" data-id="' + it.id + '" data-date="' + ds + '">' + esc(it.name) + '</button>';
       }).join("") + '</div>';
-  } else {
-    body += '<div class="howto" style="padding-top:14px">This day has not arrived yet. You can log an application once it does.</div>';
   }
   showSheet(prettyFull(ds), body);
 }
@@ -581,18 +539,17 @@ function openDay(ds){
 /* Schedule */
 function renderSchedule(){
   var v = document.getElementById("view-schedule"); v.innerHTML = "";
-  v.appendChild(el('<div class="banner info"><div>Change an interval and the next due date moves with it. ' +
-    'Every date counts forward from the last application, so a late feed simply shifts the next one. ' +
-    'The schedule runs all twelve months, with no seasonal break.</div></div>'));
 
-  var sec = el('<div class="sec"><div class="sec-h"><h2>Products and intervals</h2><span class="rule"></span></div></div>');
+  var sec = el('<div class="sec"></div>');
   state.items.forEach(function(it){
     sec.appendChild(el('<div class="rowcard">' +
       '<div class="swatch" style="--sw:var(--h-' + it.hue + ');margin-top:5px"></div>' +
       '<div class="card-body">' +
         '<div class="card-t"><h3>' + esc(it.name) + '</h3>' + statusPill(statusOf(it)) + '</div>' +
-        '<div class="meta" style="margin-top:3px">' + esc(it.note) + '</div>' +
-        '<div class="row" style="margin-top:10px">' +
+        '<div class="dose">' + esc(doseText(it)) + '</div>' +
+        '<div class="meta">' + esc(it.note) + '</div>' +
+        '<div class="meta">' + esc(it.method) + '</div>' +
+        '<div class="row" style="margin-top:11px">' +
           '<label class="lbl" for="ev-' + it.id + '">Every</label>' +
           '<input class="tnum" type="number" id="ev-' + it.id + '" min="1" max="730" step="1" value="' + it.every +
             '" style="width:72px" data-act="every" data-id="' + it.id + '">' +
@@ -607,52 +564,9 @@ function renderSchedule(){
   v.appendChild(sec);
 }
 
-/* Pots */
-function renderPots(){
-  var v = document.getElementById("view-pots"); v.innerHTML = "";
-  v.appendChild(el('<div class="banner info"><div>Every quantity in the app is worked out from this list. ' +
-    '<b>Litres</b> is how much mixed solution one pot takes in a single drench.</div></div>'));
-
-  var sec = el('<div class="sec"><div class="sec-h"><h2>My pots</h2><span class="rule"></span><span class="cnt">' +
-    state.pots.length + '</span></div></div>');
-  var box = el('<div class="card" style="padding:13px 14px;display:flex;flex-direction:column;gap:7px"></div>');
-  box.appendChild(el('<div class="pothead"><div>Plant or pot</div><div>Size (in)</div><div>Litres</div><div></div></div>'));
-  if (!state.pots.length){
-    box.appendChild(el('<div class="empty" style="border:0;padding:16px 0">No pots yet. Add your first one below.</div>'));
-  }
-  state.pots.forEach(function(p){
-    box.appendChild(el('<div class="pot">' +
-      '<input type="text" value="' + esc(p.name) + '" data-act="potname" data-id="' + p.id + '" aria-label="Pot name">' +
-      '<input class="tnum" type="number" min="2" max="48" step="1" value="' + p.size +
-        '" data-act="potsize" data-id="' + p.id + '" aria-label="Pot size in inches">' +
-      '<input class="tnum" type="number" min="0.1" max="20" step="0.1" value="' + p.litres +
-        '" data-act="potlitres" data-id="' + p.id + '" aria-label="Litres per drench">' +
-      '<button class="x" data-act="potdel" data-id="' + p.id + '" aria-label="Remove ' + esc(p.name) + '">&times;</button>' +
-    '</div>'));
-  });
-  box.appendChild(el('<div class="total"><span>' + state.pots.length + ' pots, ' + bigPots() +
-    ' at 8 inch or more</span><b>' + round(totalLitres()) + ' L per full drench</b></div>'));
-  box.appendChild(el('<div class="card-foot" style="padding:10px 0 0">' +
-    '<button class="btn primary" data-act="potadd">Add a pot</button>' +
-    (state.sample ? '<button class="btn danger" data-act="potclear">Remove the sample pots</button>' : '') +
-  '</div>'));
-  sec.appendChild(box); v.appendChild(sec);
-
-  var mix = el('<div class="sec"><div class="sec-h"><h2>Mix for the whole set</h2><span class="rule"></span></div></div>');
-  var mb = el('<div class="card" style="padding:3px 14px"></div>');
-  state.items.forEach(function(it){
-    mb.appendChild(el('<div class="logline"><span class="dot" style="--sw:var(--h-' + it.hue + ')"></span>' +
-      '<span class="nm">' + esc(it.name) + '</span><span class="d">' + esc(doseFor(it).main) + '</span></div>'));
-  });
-  mix.appendChild(mb); v.appendChild(mix);
-}
-
 /* Backup */
 function renderBackup(){
   var v = document.getElementById("view-backup"); v.innerHTML = "";
-  v.appendChild(el('<div class="banner info"><div>Everything is stored in this browser on this device only. ' +
-    'Nothing is sent anywhere. Clearing site data wipes it, so copy the backup below somewhere safe now and then.</div></div>'));
-
   var sec = el('<div class="sec"><div class="sec-h"><h2>Backup</h2><span class="rule"></span></div></div>');
   var b = el('<div class="card" style="padding:13px 14px;display:flex;flex-direction:column;gap:9px">' +
     '<textarea id="dump" rows="6" readonly aria-label="Backup data"></textarea>' +
@@ -669,12 +583,6 @@ function renderBackup(){
     '</div><div class="howto" id="restoreMsg"></div></div>'));
   v.appendChild(rsec);
 
-  var isec = el('<div class="sec"><div class="sec-h"><h2>Put it on your home screen</h2><span class="rule"></span></div></div>');
-  isec.appendChild(el('<div class="card" style="padding:13px 14px"><div class="howto">' +
-    '<b>iPhone:</b> open this page in Safari, tap Share, then Add to Home Screen.<br>' +
-    '<b>Android:</b> open it in Chrome, tap the three dot menu, then Add to Home screen.<br>' +
-    'It then opens full screen like an app, and your log stays on the phone.</div></div>'));
-  v.appendChild(isec);
 }
 
 /* sheet */
@@ -691,7 +599,7 @@ function showSheet(title, html){
 function closeSheet(){ var s = document.getElementById("scrim"); if (s) s.remove(); }
 
 /* render */
-var current = "today";
+var current = "calendar";
 function render(){
   var chip = document.getElementById("seasonChip");
   var late = 0, now = 0;
@@ -704,16 +612,13 @@ function render(){
   else if (now){ chip.className = "season duenow"; chip.textContent = now + (now === 1 ? " item due today" : " items due today"); }
   else { chip.className = "season"; chip.textContent = "Nothing due today"; }
 
-  ["today","calendar","schedule","pots","backup"].forEach(function(k){
+  ["calendar","today","schedule","backup"].forEach(function(k){
     document.getElementById("view-" + k).hidden = (k !== current);
   });
   if (current === "today") renderToday();
   else if (current === "calendar") renderCalendar();
   else if (current === "schedule") renderSchedule();
-  else if (current === "pots") renderPots();
   else if (current === "backup") renderBackup();
-  document.getElementById("foot").textContent =
-    "Intervals from your own feeding table, running all year. Saved on this device only.";
 }
 
 /* events */
@@ -756,18 +661,6 @@ document.addEventListener("click", function(e){
     it.last = null; save(); render();
     showToast(it.name + " log cleared", null);
   }
-  else if (a === "potadd"){
-    state.pots.push({ id:"p" + Date.now(), name:"Pot " + (state.pots.length + 1), size:10, litres:1 });
-    save(); render();
-  }
-  else if (a === "potdel"){
-    state.pots = state.pots.filter(function(p){ return p.id !== id; });
-    save(); render();
-  }
-  else if (a === "potclear"){
-    state.pots = []; state.sample = false; save(); render();
-    showToast("Sample pots removed. Add your own.", null);
-  }
   else if (a === "copy"){
     var ta = document.getElementById("dump");
     if (navigator.clipboard && navigator.clipboard.writeText){
@@ -782,12 +675,11 @@ document.addEventListener("click", function(e){
       var p = JSON.parse(document.getElementById("restore").value.trim());
       if (!p || !Array.isArray(p.items) || !p.items.length) throw new Error("there is no schedule in it");
       state = p;
-      delete state.season;
-      if (!Array.isArray(state.pots)) state.pots = [];
+      delete state.season; delete state.pots; delete state.sample;
       if (!Array.isArray(state.history)) state.history = [];
-      save(); current = "today";
+      save(); current = "calendar";
       document.querySelectorAll(".tab").forEach(function(t){
-        t.setAttribute("aria-selected", String(t.dataset.view === "today"));
+        t.setAttribute("aria-selected", String(t.dataset.view === "calendar"));
       });
       render(); showToast("Backup restored", null);
     } catch(err){ msg.textContent = "Could not read that backup: " + err.message + "."; }
@@ -812,9 +704,6 @@ document.addEventListener("change", function(e){
     if (it){ it.every = Math.max(1, Math.min(730, Math.round(Number(t.value) || 1))); save(); render(); }
   }
   else if (a === "setlast"){ var i2 = byId(id); if (i2){ i2.last = t.value || null; save(); render(); } }
-  else if (a === "potname"){ p = state.pots.find(function(x){ return x.id === id; }); if (p){ p.name = t.value; save(); } }
-  else if (a === "potsize"){ p = state.pots.find(function(x){ return x.id === id; }); if (p){ p.size = Number(t.value) || 0; save(); render(); } }
-  else if (a === "potlitres"){ p = state.pots.find(function(x){ return x.id === id; }); if (p){ p.litres = Number(t.value) || 0; save(); render(); } }
 });
 
 document.addEventListener("keydown", function(e){

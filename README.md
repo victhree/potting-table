@@ -18,7 +18,7 @@ Seven products, each on its own interval, counted forward from the last time you
 | Neem Khali | 60 days | 1 handful per 8 to 10 inch pot |
 | Saaf Fungicide | 90 days | 1.5 g per litre |
 
-You keep a list of your pots (name, size in inches, litres per drench), and the app turns the per-litre rates into the actual amount to mix for the whole collection. Tap once to log an application. The calendar projects every product forward and lets you log or clear an entry on any past day.
+Opens on the calendar. Tap a day to log an application or clear one. The Due tab lists what is overdue, due today and coming up. The Schedule tab carries the full reference: dose per litre, scoop equivalent, method, and the editable interval for each product.
 
 ## Installing it on a phone
 
