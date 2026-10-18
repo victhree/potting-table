@@ -6,12 +6,13 @@ Live: https://victhree.github.io/potting-table/
 
 ## What it does
 
-Six products, each on its own interval, counted forward from the last time you applied it:
+Seven products, each on its own interval, counted forward from the last time you applied it:
 
 | Product | Every | Dose |
 |---|---|---|
 | NPK 19:19:19 | 20 days | 1 g per litre |
 | Humic Acid | 30 days | 1 to 1.5 ml per litre |
+| Epsom Salt | 30 days | 1 g per litre, about one level scoop |
 | Neem Oil Spray | 30 days | 5 ml per litre, plus 2 to 3 drops of liquid soap |
 | Vermicompost | 60 days | 2 handfuls per 8 to 10 inch pot, 1 for smaller |
 | Neem Khali | 60 days | 1 handful per 8 to 10 inch pot |
