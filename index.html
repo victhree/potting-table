@@ -220,12 +220,37 @@ var DEFAULTS = {
 var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 var MON3 = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+/* Starting dates, applied once per device and then never again, so editing a
+   date afterwards sticks. */
+var SEED = {
+  id: "2026-10-18",
+  applied: [ { id:"npk", d:"2026-10-18" } ],
+  due: { humic:"2026-10-28", epsom:"2026-10-28", vermi:"2026-10-28", khali:"2026-10-28" }
+};
+function applySeed(s){
+  if (s.seed === SEED.id) return s;
+  SEED.applied.forEach(function(a){
+    var it = s.items.filter(function(i){ return i.id === a.id; })[0];
+    if (!it) return;
+    var already = s.history.some(function(h){ return h.id === a.id && h.d === a.d; });
+    if (!already) s.history.push({ d:a.d, id:a.id });
+    if (!it.last || a.d > it.last) it.last = a.d;
+    it.due = null;
+  });
+  Object.keys(SEED.due).forEach(function(k){
+    var it = s.items.filter(function(i){ return i.id === k; })[0];
+    if (it && !it.last) it.due = SEED.due[k];
+  });
+  s.history.sort(function(a, b){ return a.d < b.d ? 1 : (a.d > b.d ? -1 : 0); });
+  s.seed = SEED.id;
+  return s;
+}
 function load(){
   try {
     var raw = localStorage.getItem(KEY);
-    if (!raw) return JSON.parse(JSON.stringify(DEFAULTS));
+    if (!raw) return applySeed(JSON.parse(JSON.stringify(DEFAULTS)));
     var s = JSON.parse(raw);
-    if (!s || !Array.isArray(s.items) || !s.items.length) return JSON.parse(JSON.stringify(DEFAULTS));
+    if (!s || !Array.isArray(s.items) || !s.items.length) return applySeed(JSON.parse(JSON.stringify(DEFAULTS)));
     delete s.season; delete s.pots; delete s.sample;
     if (!Array.isArray(s.history)) s.history = [];
     // Pick up any product added since this device last saved, leaving the
@@ -234,8 +259,8 @@ function load(){
       var has = s.items.some(function(i){ return i.id === d.id; });
       if (!has) s.items.splice(Math.min(pos, s.items.length), 0, JSON.parse(JSON.stringify(d)));
     });
-    return s;
-  } catch(e){ return JSON.parse(JSON.stringify(DEFAULTS)); }
+    return applySeed(s);
+  } catch(e){ return applySeed(JSON.parse(JSON.stringify(DEFAULTS))); }
 }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
 var state = load();
@@ -251,13 +276,15 @@ function diffDays(a, b){ return Math.round((parse(b) - parse(a)) / 86400000); }
 function pretty(s){ var d = parse(s); return d.getDate() + " " + MON3[d.getMonth()]; }
 function prettyFull(s){ var d = parse(s); return d.getDate() + " " + MON3[d.getMonth()] + " " + d.getFullYear(); }
 
-/* The schedule runs all year: next due is simply the last application plus the interval. */
+/* Next due is the last application plus the interval, unless a date has been
+   set by hand. A hand-set date is used once, then logging takes over again. */
 function nextDue(item){
+  if (item.due) return item.due;
   return item.last ? addDays(item.last, item.every) : todayISO();
 }
 function statusOf(item){
   var due = nextDue(item), gap = diffDays(todayISO(), due);
-  if (!item.last) return { key:"start", due:due, gap:gap };
+  if (!item.last && !item.due) return { key:"start", due:due, gap:gap };
   if (gap < 0) return { key:"over", due:due, gap:gap };
   if (gap === 0) return { key:"due", due:due, gap:gap };
   return { key:"soon", due:due, gap:gap };
@@ -294,6 +321,8 @@ function recomputeLast(id){
 }
 function addEntry(id, date){
   state.history.push({ d:date, id:id });
+  var item = byId(id);
+  if (item) item.due = null;   // a hand-set date is spent once it is logged
   sortHistory(); recomputeLast(id); save(); render();
 }
 function dropEntry(id, date){
@@ -554,6 +583,9 @@ function renderSchedule(){
           '<input class="tnum" type="number" id="ev-' + it.id + '" min="1" max="730" step="1" value="' + it.every +
             '" style="width:72px" data-act="every" data-id="' + it.id + '">' +
           '<span class="every">days</span>' +
+          '<label class="lbl" for="nd-' + it.id + '" style="margin-left:4px">Next due</label>' +
+          '<input type="date" id="nd-' + it.id + '" value="' + nextDue(it) +
+            '" data-act="setdue" data-id="' + it.id + '">' +
           '<label class="lbl" for="ls-' + it.id + '" style="margin-left:4px">Last applied</label>' +
           '<input type="date" id="ls-' + it.id + '" value="' + (it.last || "") + '" max="' + todayISO() +
             '" data-act="setlast" data-id="' + it.id + '">' +
@@ -704,6 +736,16 @@ document.addEventListener("change", function(e){
     if (it){ it.every = Math.max(1, Math.min(730, Math.round(Number(t.value) || 1))); save(); render(); }
   }
   else if (a === "setlast"){ var i2 = byId(id); if (i2){ i2.last = t.value || null; save(); render(); } }
+  else if (a === "setdue"){
+    var i3 = byId(id);
+    if (i3){
+      // Storing it only when it differs from the computed date keeps the
+      // override from freezing a product that is being logged normally.
+      var natural = i3.last ? addDays(i3.last, i3.every) : todayISO();
+      i3.due = (t.value && t.value !== natural) ? t.value : null;
+      save(); render();
+    }
+  }
 });
 
 document.addEventListener("keydown", function(e){
