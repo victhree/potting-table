@@ -30,6 +30,7 @@ img{max-width:100%}
   --line:#dbe2da; --line-2:#c6d0c5; --accent:#3d6b4b; --accent-soft:#e3ece4; --accent-ink:#ffffff;
   --over:#a63a2b; --over-soft:#f7e6e3;
   --h-npk:#2f6fa8; --h-humic:#93732a; --h-neem:#2f7f6a; --h-vermi:#6b4a33; --h-khali:#6f7a2f; --h-saaf:#7a4f8f; --h-epsom:#a0566b;
+  --h-c1:#4f86b8; --h-c2:#b0823a; --h-c3:#3f8f78; --h-c4:#8a6a4a; --h-c5:#7f8a3a; --h-c6:#96679f;
   --shadow:0 1px 2px rgba(27,35,28,.06), 0 6px 18px rgba(27,35,28,.05);
   --display:"Newsreader",Georgia,"Times New Roman",serif;
   --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -40,6 +41,7 @@ img{max-width:100%}
   --line:#2c342c; --line-2:#3b453b; --accent:#7fb28c; --accent-soft:#1f2c22; --accent-ink:#0f170f;
   --over:#e2806c; --over-soft:#2e1d19;
   --h-npk:#6fa8d8; --h-humic:#d4b05e; --h-neem:#6fc0a6; --h-vermi:#b08f6f; --h-khali:#b7bd6a; --h-saaf:#bb92cf; --h-epsom:#d894a6;
+  --h-c1:#8ab8dd; --h-c2:#dcb86a; --h-c3:#7fc9b2; --h-c4:#bb9a79; --h-c5:#c3c878; --h-c6:#c39ed4;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.25);
   color-scheme:dark;
 }}
@@ -48,6 +50,7 @@ img{max-width:100%}
   --line:#2c342c; --line-2:#3b453b; --accent:#7fb28c; --accent-soft:#1f2c22; --accent-ink:#0f170f;
   --over:#e2806c; --over-soft:#2e1d19;
   --h-npk:#6fa8d8; --h-humic:#d4b05e; --h-neem:#6fc0a6; --h-vermi:#b08f6f; --h-khali:#b7bd6a; --h-saaf:#bb92cf; --h-epsom:#d894a6;
+  --h-c1:#8ab8dd; --h-c2:#dcb86a; --h-c3:#7fc9b2; --h-c4:#bb9a79; --h-c5:#c3c878; --h-c6:#c39ed4;
   --shadow:0 1px 2px rgba(0,0,0,.4), 0 6px 18px rgba(0,0,0,.25);
   color-scheme:dark;
 }
@@ -301,6 +304,8 @@ function statusPill(st){
 function round(n){ return (Math.round(n*10)/10).toString().replace(/\.0$/,""); }
 function doseText(item){
   var d = item.dose;
+  if (!d) return "";
+  if (d.kind === "text") return d.text || "";
   if (d.kind === "perL"){
     return (d.min === d.max ? round(d.min) : round(d.min) + " to " + round(d.max)) + " " + d.unit + " per litre";
   }
@@ -376,6 +381,7 @@ var openExtra = {};
 function cardFor(item){
   var st = statusOf(item), d = { main: doseText(item) };
   var pair = item.pairs ? byId(item.pairs) : null;
+  var note = item.note || "", method = item.method || "";
   var c = el(
     '<article class="card' + (st.key==="over" ? " over" : "") + '">' +
       '<div class="card-main">' +
@@ -383,8 +389,9 @@ function cardFor(item){
         '<div class="card-body">' +
           '<div class="card-t"><h3>' + esc(item.name) + '</h3>' +
             '<span class="every">every ' + item.every + ' d</span>' + statusPill(st) + '</div>' +
-          '<div class="dose">' + esc(d.main) + '</div>' +
-          '<div class="meta">' + (item.last ? prettyFull(item.last) + '<span class="sep">/</span>' : '') +
+          (d.main ? '<div class="dose">' + esc(d.main) + '</div>' : '') +
+          '<div class="meta"' + (d.main ? '' : ' style="margin-top:7px"') + '>' +
+            (item.last ? prettyFull(item.last) + '<span class="sep">/</span>' : '') +
             'next ' + pretty(st.due) +
             (pair ? '<span class="sep">/</span>with ' + esc(pair.name) : '') + '</div>' +
         '</div>' +
@@ -402,7 +409,7 @@ function cardFor(item){
           '<input type="date" id="dt-' + item.id + '" value="' + todayISO() + '" max="' + todayISO() + '">' +
           '<button class="btn sm primary" data-act="logdate" data-id="' + item.id + '">Log</button>' +
         '</div>' +
-        '<div class="howto">' + esc(item.note) + '<br>' + esc(item.method) + '</div>' +
+        (note || method ? '<div class="howto">' + esc(note) + (note && method ? '<br>' : '') + esc(method) + '</div>' : '') +
       '</div>'));
   }
   return c;
@@ -575,9 +582,9 @@ function renderSchedule(){
       '<div class="swatch" style="--sw:var(--h-' + it.hue + ');margin-top:5px"></div>' +
       '<div class="card-body">' +
         '<div class="card-t"><h3>' + esc(it.name) + '</h3>' + statusPill(statusOf(it)) + '</div>' +
-        '<div class="dose">' + esc(doseText(it)) + '</div>' +
-        '<div class="meta">' + esc(it.note) + '</div>' +
-        '<div class="meta">' + esc(it.method) + '</div>' +
+        (doseText(it) ? '<div class="dose">' + esc(doseText(it)) + '</div>' : '') +
+        (it.note ? '<div class="meta">' + esc(it.note) + '</div>' : '') +
+        (it.method ? '<div class="meta">' + esc(it.method) + '</div>' : '') +
         '<div class="row" style="margin-top:11px">' +
           '<label class="lbl" for="ev-' + it.id + '">Every</label>' +
           '<input class="tnum" type="number" id="ev-' + it.id + '" min="1" max="730" step="1" value="' + it.every +
@@ -590,10 +597,40 @@ function renderSchedule(){
           '<input type="date" id="ls-' + it.id + '" value="' + (it.last || "") + '" max="' + todayISO() +
             '" data-act="setlast" data-id="' + it.id + '">' +
           (it.last ? '<button class="btn sm ghost" data-act="clearlast" data-id="' + it.id + '">Clear log</button>' : '') +
+          (it.custom ? '<button class="btn sm danger" data-act="delitem" data-id="' + it.id + '">Remove</button>' : '') +
         '</div>' +
       '</div></div>'));
   });
+  sec.appendChild(el('<div class="card-foot" style="padding:2px 0 0">' +
+    '<button class="btn primary" data-act="additem">Add item</button></div>'));
   v.appendChild(sec);
+}
+
+function showAddSheet(){
+  showSheet("New item",
+    '<div style="display:flex;flex-direction:column;gap:12px">' +
+      '<div><label class="lbl" for="ni-name">Name</label>' +
+        '<input type="text" id="ni-name" placeholder="Seaweed tonic" style="width:100%;margin-top:4px"></div>' +
+      '<div><label class="lbl" for="ni-dose">Amount</label>' +
+        '<input type="text" id="ni-dose" placeholder="2 ml per litre" style="width:100%;margin-top:4px"></div>' +
+      '<div><label class="lbl" for="ni-method">Method</label>' +
+        '<input type="text" id="ni-method" placeholder="Soil drench in the evening" style="width:100%;margin-top:4px"></div>' +
+      '<div class="row"><label class="lbl" for="ni-every">Every</label>' +
+        '<input class="tnum" type="number" id="ni-every" min="1" max="730" step="1" value="30" style="width:76px">' +
+        '<span class="every">days</span></div>' +
+      '<div class="row">' +
+        '<select id="ni-mode" aria-label="What the date means">' +
+          '<option value="due">Next due</option>' +
+          '<option value="last">Last applied</option>' +
+        '</select>' +
+        '<input type="date" id="ni-date" value="' + todayISO() + '" aria-label="Date">' +
+      '</div>' +
+      '<div class="howto" id="ni-msg"></div>' +
+      '<div class="card-foot" style="padding:0">' +
+        '<button class="btn primary" data-act="saveitem">Add</button>' +
+        '<button class="btn" data-act="closesheet">Cancel</button>' +
+      '</div>' +
+    '</div>');
 }
 
 /* Backup */
@@ -675,6 +712,43 @@ document.addEventListener("click", function(e){
   }
   else if (a === "logon"){ closeSheet(); logItem(id, b.dataset.date); }
   else if (a === "drop"){ closeSheet(); removeEntry(id, b.dataset.date); }
+  else if (a === "additem"){ showAddSheet(); }
+  else if (a === "saveitem"){
+    var msg = document.getElementById("ni-msg");
+    var name = (document.getElementById("ni-name").value || "").trim();
+    if (!name){ msg.textContent = "Give it a name."; return; }
+    var mode = document.getElementById("ni-mode").value;
+    var date = document.getElementById("ni-date").value || todayISO();
+    if (mode === "last" && date > todayISO()){
+      msg.textContent = "A last application cannot be in the future. Switch to Next due, or pick an earlier date.";
+      return;
+    }
+    var used = state.items.filter(function(i){ return i.custom; }).length;
+    var item = {
+      id: "c" + Date.now(),
+      name: name,
+      every: Math.max(1, Math.min(730, Math.round(Number(document.getElementById("ni-every").value) || 30))),
+      hue: "c" + (used % 6 + 1),
+      last: null, due: null, custom: true,
+      dose: { kind:"text", text:(document.getElementById("ni-dose").value || "").trim() },
+      note: "",
+      method: (document.getElementById("ni-method").value || "").trim()
+    };
+    state.items.push(item);
+    if (mode === "last"){ state.history.push({ d:date, id:item.id }); sortHistory(); item.last = date; }
+    else { item.due = date; }
+    save(); closeSheet(); render();
+    showToast(name + (mode === "last" ? " added, logged " : " added, due ") + pretty(date), null);
+  }
+  else if (a === "delitem"){
+    var di = byId(id);
+    if (!di) return;
+    if (b.dataset.sure !== "1"){ b.dataset.sure = "1"; b.textContent = "Remove it?"; return; }
+    state.items = state.items.filter(function(i){ return i.id !== id; });
+    state.history = state.history.filter(function(h){ return h.id !== id; });
+    save(); render();
+    showToast(di.name + " removed", null);
+  }
   else if (a === "prevm"){ calMonth.m--; if (calMonth.m < 0){ calMonth.m = 11; calMonth.y--; } render(); }
   else if (a === "nextm"){ calMonth.m++; if (calMonth.m > 11){ calMonth.m = 0; calMonth.y++; } render(); }
   else if (a === "thism"){ var n = new Date(); calMonth = { y:n.getFullYear(), m:n.getMonth() }; render(); }

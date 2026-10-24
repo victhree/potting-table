@@ -18,6 +18,8 @@ Seven products, each on its own interval, counted forward from the last time you
 | Neem Khali | 60 days | 1 handful per 8 to 10 inch pot |
 | Saaf Fungicide | 90 days | 1.5 g per litre |
 
+Add your own items too: Schedule, Add item. Give it a name, an amount, a method and an interval, then anchor it to a date that is either already past (logged then) or still ahead (due then).
+
 Opens on the calendar. Tap a day to log an application or clear one. The Due tab lists what is overdue, due today and coming up. The Schedule tab carries the full reference: dose per litre, scoop equivalent, method, and the editable interval for each product.
 
 ## Installing it on a phone

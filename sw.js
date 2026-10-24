@@ -2,7 +2,7 @@
    The page is network-first so a new version shows up as soon as you are online,
    and cache-first for everything else so the app opens with no signal at all. */
 
-var CACHE = "potting-table-v6";
+var CACHE = "potting-table-v7";
 var SHELL = [
   "./",
   "./index.html",
