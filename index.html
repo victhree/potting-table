@@ -185,6 +185,7 @@ textarea{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font
 <script>
 "use strict";
 var KEY = "pottingtable.v1";
+var BUILD = "2026-10-24 14:07";   /* stamped by build.py */
 
 var DEFAULTS = {
   items: [
@@ -652,6 +653,7 @@ function renderBackup(){
     '</div><div class="howto" id="restoreMsg"></div></div>'));
   v.appendChild(rsec);
 
+  v.appendChild(el('<div class="howto" style="padding:2px 2px 0">Build ' + esc(BUILD) + '</div>'));
 }
 
 /* sheet */
@@ -835,7 +837,7 @@ render();
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("sw.js").catch(function () { /* offline support is optional */ });
+    navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).catch(function () { /* offline support is optional */ });
   });
 }
 </script>

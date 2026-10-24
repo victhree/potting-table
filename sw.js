@@ -2,7 +2,7 @@
    The page is network-first so a new version shows up as soon as you are online,
    and cache-first for everything else so the app opens with no signal at all. */
 
-var CACHE = "potting-table-v7";
+var CACHE = "potting-table-v8";
 var SHELL = [
   "./",
   "./index.html",
@@ -37,7 +37,8 @@ self.addEventListener("fetch", function (e) {
 
   if (req.mode === "navigate") {
     e.respondWith(
-      fetch(req).then(function (res) {
+      // no-store, so a page update is never held back by the host's max-age
+      fetch(req.url, { cache: "no-store" }).then(function (res) {
         var copy = res.clone();
         caches.open(CACHE).then(function (c) { c.put("./index.html", copy); });
         return res;
