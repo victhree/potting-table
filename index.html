@@ -185,7 +185,7 @@ textarea{width:100%;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font
 <script>
 "use strict";
 var KEY = "pottingtable.v1";
-var BUILD = "2026-10-24 14:07";   /* stamped by build.py */
+var BUILD = "2026-10-24 14:13";   /* stamped by build.py */
 
 var DEFAULTS = {
   items: [
@@ -570,6 +570,8 @@ function openDay(ds){
         return '<button class="btn sm" data-act="logon" data-id="' + it.id + '" data-date="' + ds + '">' + esc(it.name) + '</button>';
       }).join("") + '</div>';
   }
+  body += '<div class="card-foot" style="padding:16px 0 0">' +
+    '<button class="btn primary" data-act="additem" data-date="' + ds + '">Add something new</button></div>';
   showSheet(prettyFull(ds), body);
 }
 
@@ -602,12 +604,12 @@ function renderSchedule(){
         '</div>' +
       '</div></div>'));
   });
-  sec.appendChild(el('<div class="card-foot" style="padding:2px 0 0">' +
-    '<button class="btn primary" data-act="additem">Add item</button></div>'));
   v.appendChild(sec);
 }
 
-function showAddSheet(){
+function showAddSheet(date){
+  var d = date || todayISO();
+  var mode = d > todayISO() ? "due" : "last";
   showSheet("New item",
     '<div style="display:flex;flex-direction:column;gap:12px">' +
       '<div><label class="lbl" for="ni-name">Name</label>' +
@@ -621,10 +623,10 @@ function showAddSheet(){
         '<span class="every">days</span></div>' +
       '<div class="row">' +
         '<select id="ni-mode" aria-label="What the date means">' +
-          '<option value="due">Next due</option>' +
-          '<option value="last">Last applied</option>' +
+          '<option value="due"' + (mode === "due" ? " selected" : "") + '>Next due</option>' +
+          '<option value="last"' + (mode === "last" ? " selected" : "") + '>Last applied</option>' +
         '</select>' +
-        '<input type="date" id="ni-date" value="' + todayISO() + '" aria-label="Date">' +
+        '<input type="date" id="ni-date" value="' + d + '" aria-label="Date">' +
       '</div>' +
       '<div class="howto" id="ni-msg"></div>' +
       '<div class="card-foot" style="padding:0">' +
@@ -714,7 +716,7 @@ document.addEventListener("click", function(e){
   }
   else if (a === "logon"){ closeSheet(); logItem(id, b.dataset.date); }
   else if (a === "drop"){ closeSheet(); removeEntry(id, b.dataset.date); }
-  else if (a === "additem"){ showAddSheet(); }
+  else if (a === "additem"){ showAddSheet(b.dataset.date); }
   else if (a === "saveitem"){
     var msg = document.getElementById("ni-msg");
     var name = (document.getElementById("ni-name").value || "").trim();
